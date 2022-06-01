@@ -1,0 +1,18 @@
+{{ range $key,$val := .Values.jobs }}
+{{ $loop_dict := dict "root" $.Values "application_name" $key "application" $val }}
+{{- $base_name := include "base_name" $loop_dict | trim }}
+{{ if $val.configmap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-configmap" $base_name }}
+  labels:
+    {{ include "labels" $loop_dict | indent 4 }}
+data:
+{{ range $config_name,$config_val := $val.configmap.config_files }}
+  {{ .name }}: |-
+{{ toYaml .value | indent 4 }}
+{{ end }}
+---
+{{ end }}
+{{ end }}

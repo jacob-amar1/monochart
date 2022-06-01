@@ -1,0 +1,48 @@
+{{ range $key,$val := .Values.applications }}
+{{ $loop_dict := dict "root" $.Values "application_name" $key "application" $val }}
+{{- $base_name := include "base_name" $loop_dict | trim }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $base_name }}
+  labels:
+    {{ include "labels" $loop_dict | indent 4 }}
+  namespace: {{ $.Values.global.namespace }}
+  annotations:
+  {{ include "annotations" $loop_dict | indent 4 }}
+spec:
+  replicas: {{ $val.replicas }}
+  strategy:
+    type: RollingUpdate
+    {{ if $val.rollingUpdate }}
+    rollingUpdate:
+      maxSurge: {{ $val.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ $val.rollingUpdate.maxUnavailable }}
+    {{ else }}
+    rollingUpdate:
+      maxSurge: {{ $.Values.global.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ $.Values.global.rollingUpdate.maxUnavailable }}
+    {{ end }}
+  selector:
+    matchLabels:
+      {{ include "labels" $loop_dict | indent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{ include "annotations" $loop_dict | indent 8 }}
+      labels:
+        {{ include "labels" $loop_dict | indent 8 }}
+    spec:
+        {{ include "affinityandtolerations" $loop_dict | indent 8 }}
+        {{- include "containers" $loop_dict | indent 8 }}
+        serviceAccountName: {{ $.Values.global.name }}-sa
+        {{- if $val.configmap }}
+        {{ range $config_name,$config_val := $val.configmap.config_files }}
+        volumes:
+        - name: {{ .name }}-volume
+          configMap:
+            name: {{ printf "%s-%s-%s-configmap" $.Values.global.name $key $config_val.name }}
+        {{ end }}
+        {{ end }}
+---
+{{ end }}

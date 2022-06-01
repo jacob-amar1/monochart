@@ -1,0 +1,19 @@
+{{ range $key,$val := .Values.jobs }}
+{{ $loop_dict := dict "root" $.Values "application_name" $key "application" $val }}
+{{- $base_name := include "base_name" $loop_dict | trim }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $base_name }}
+  labels:
+  {{ include "labels" $loop_dict | indent 4 }}
+  annotations:
+  {{ include "annotations" $loop_dict | indent 4 }}
+spec:
+  template:
+    spec:
+    {{ include "affinityandtolerations" $loop_dict | indent 6 }}
+    {{- include "containers" $loop_dict | indent 6 }}
+    {{- include "volumes" $loop_dict | indent 6 }}
+{{ end }}

@@ -1,0 +1,24 @@
+{{ range $key,$val := .Values.applications }}
+{{ $loop_dict := dict "root" $.Values "application_name" $key "application" $val }}
+{{- $base_name := include "base_name" $loop_dict | trim }}
+{{ if $val.service }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $base_name }}-service
+  labels:
+    {{ include "labels" $loop_dict | indent 4 }}
+spec:
+  selector:
+    {{ include "labels" $loop_dict | indent 6 }}
+  type: {{ default "ClusterIP" $val.service.type }}
+  {{ range  $val.ports }}
+  ports:
+    - name: {{ printf "%s-%s" $base_name .name }}
+      protocol: {{ .protocol }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+  {{ end }}
+---
+{{ end }}
+{{ end }}

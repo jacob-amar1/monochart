@@ -1,0 +1,96 @@
+db_init_config:
+  asft: test
+  taegtea: test
+
+
+global:
+  annotations:
+    test_annotation: "test"
+  env:
+    TEST: TEST
+  environment: nvp1
+  affinity:
+    key: test
+    value: test
+  toleration:
+    key: test
+  name: ssrv
+  team_name: self-serve
+  namespace: selfserve
+  cluster: "eks-main"
+  image:
+    repository: "555323525.ecr.us-east-1.dkr.aws.com"
+  rollingUpdate:
+    maxSurge: 25
+    maxUnavailable: 1
+jobs:
+  db-init:
+    annotations:
+      "helm.hooks.sh": "post-upgrade"
+    configmap:
+      config_files:
+        - name: test2.yaml
+          mount_on: /etc/configs
+          value:
+            "{{ .Values.db_init_config | toYaml }}"
+        - name: test.yaml
+          mount_on: /etc/configs
+          value:
+            a: test
+            b:
+              c: test
+    test: test
+    affinity:
+      key: kafka
+      value: kafka
+    toleration:
+      key: kafka
+    resources:
+      limits:
+        cpu: "2"
+        memory: "2"
+      requests:
+        cpu: "1"
+        memory: "1"
+    image:
+      name: kafka
+      tag: "1.2"
+applications:
+#  kafka-test:
+#    service:
+#    ports:
+#      - name: inbound
+#        port: 80
+#        protocol: TCP
+#    env:
+#      TEST2: TEST2
+#    labels:
+#      test: value4
+#    affinity:
+#      key: kafka
+#      value: kafka
+#    toleration:
+#      key: kafka
+#    resources:
+#      limits:
+#        cpu: "2"
+#        memory: "2"
+#      requests:
+#        cpu: "1"
+#        memory: "1"
+#    image:
+#      name: kafka
+#      tag: "1.2"
+#  kafka-consumer:
+#    labels:
+#      test: value2
+#    resources:
+#      limits:
+#        cpu: "2"
+#        memory: "2"
+#      requests:
+#        cpu: "1"
+#        memory: "1"
+#    image:
+#      name: kafka
+#      tag: "1.2"
